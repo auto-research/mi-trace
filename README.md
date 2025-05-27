@@ -1,36 +1,30 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MI Trace
 
-## Getting Started
+MI Trace 是一个使用 Next.js 构建的小型项目，用于对小米手机的评论数据和销量趋势进行可视化分析。
 
-First, run the development server:
+## 功能
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. 通过接口抓取小米手机评论数据，示例接口:
+    ```
+    GET /api/comments?pid=10050081
+    ```
+    该接口会转发请求到小米官方的
+    `https://api2.service.order.mi.com/user_comment/get_summary`，
+    并将返回的 JSONP 数据解析为 JSON。
+2. 使用图表的方式直观分析小米手机销量趋势，包括两个统计维度:
+   - 同系列不同年份款（例如小米13/小米14/小米15）
+   - 同年份不同型号（例如小米数字系列、红米 K 系列、红米 Turbo 系列）
+   可通过 `/sales` 页面查看示例图表。
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 开发运行
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. 安装依赖：
+   ```bash
+   npm install
+   ```
+2. 启动服务：
+   ```bash
+   npm run dev
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+打开 [http://localhost:3000](http://localhost:3000) 使用。
