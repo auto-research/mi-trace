@@ -1,0 +1,15 @@
+export const productList = [
+  // { "id": 19752, "name": "Xiaomi Civi 4 Pro" },
+  // { "id": 19300, "name": "Xiaomi 14" },
+  // { "id": 19288, "name": "Xiaomi 14 Pro" },
+  { "id": 20844, "name": "REDMI Turbo 4" },
+  { "id": 21136, "name": "REDMI Turbo 4 Pro" },
+  { "id": 20790, "name": "REDMI K80" },
+  { "id": 20779, "name": "REDMI K80 Pro" },
+  { "id": 21298, "name": "Xiaomi Civi 5 Pro" },
+  { "id": 20618, "name": "Xiaomi 15" },
+  { "id": 20609, "name": "Xiaomi 15 定制版" },
+  { "id": 20603, "name": "Xiaomi 15 Pro" },
+  { "id": 20982, "name": "Xiaomi 15 Ultra" },
+  { "id": 21305, "name": "Xiaomi 15S Pro" },
+];
