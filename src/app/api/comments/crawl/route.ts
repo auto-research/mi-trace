@@ -79,3 +79,5 @@ export async function PUT(req: NextRequest) {
   db.close();
   return NextResponse.json({ results });
 } 
+
+export const dynamic = 'force-static'
