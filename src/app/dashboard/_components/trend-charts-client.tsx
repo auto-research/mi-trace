@@ -46,13 +46,13 @@ export default function TrendChartsClient({ productList, dataMap }: TrendChartsC
           ))}
         </select>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 gap-8">
         {subCategories.map((sub) => (
           <div key={sub} className="bg-white dark:bg-black rounded-lg shadow p-4 relative">
             <h2 className="text-xl font-semibold mb-2">{sub}</h2>
             <Suspense fallback={<div className="h-64 flex items-center justify-center">加载中...</div>}>
               <TrendChart
-                products={subCategoryMap[sub].map(p => ({ id: p.id, name: p.name }))}
+                products={subCategoryMap[sub].map(p => p)}
                 dataMap={dataMap}
               />
             </Suspense>
