@@ -46,6 +46,24 @@ if (typeof window !== 'undefined' && echarts && !(echarts as any).getTheme?.('mi
   echarts.registerTheme('mi', miTheme);
 }
 
+// 年份主色映射
+const yearColorMap: Record<number, string> = {
+  2024: '#ff6900', // 橙
+  2023: '#3b82f6', // 蓝
+  2022: '#22c55e', // 绿
+  2021: '#f59e42', // 橙黄
+  2020: '#6366f1', // 靛蓝
+};
+
+function hexToRgba(hex: string, alpha: number) {
+  const h = hex.replace('#', '');
+  const bigint = parseInt(h, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
 export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
   const chartRef = useRef<HTMLDivElement>(null);
 
@@ -78,8 +96,19 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
           yearLineTypeMap[year] = 'dotted';
         }
       });
+      // 按年份分组产品
+      const productsByYear: Record<number, Product[]> = {};
+      products.forEach(p => {
+        if (!productsByYear[p.year]) productsByYear[p.year] = [];
+        productsByYear[p.year].push(p);
+      });
       // 构建柱状图 series：每个产品一个 series，stack 按年份
       products.forEach((p) => {
+        const yearProducts = productsByYear[p.year];
+        const idx = yearProducts.findIndex(prod => prod.id === p.id);
+        // 透明度递减，最多 5 个产品，最浅 0.2
+        const alpha = 0.5 - idx * 0.1 > 0.2 ? 0.5 - idx * 0.1 : 0.2;
+        const color = hexToRgba(yearColorMap[p.year] || '#888', alpha);
         const dataArr = dataMap[p.id] || [];
         const dataByDate: Record<string, number> = {};
         dataArr.forEach((item) => {
@@ -92,11 +121,19 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
           data: allDates.map((date) => dataByDate[date] ?? null),
           emphasis: { focus: 'series' },
           barMaxWidth: 18,
+          yAxisIndex: 1, // 使用右侧 y 轴
+          itemStyle: {
+            color,
+          },
         });
       });
       // 构建折线图 series
       series.push(
         ...products.map((p) => {
+          const yearProducts = productsByYear[p.year];
+          const idx = yearProducts.findIndex(prod => prod.id === p.id);
+          const alpha = 1 - idx * 0.15 > 0.5 ? 1 - idx * 0.15 : 0.5;
+          const color = hexToRgba(yearColorMap[p.year] || '#888', alpha);
           const dataArr = dataMap[p.id] || [];
           const dataByDate: Record<string, number> = {};
           dataArr.forEach((item) => {
@@ -109,7 +146,8 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
             data: allDates.map((date) => dataByDate[date] ?? null),
             smooth: true,
             showSymbol: false,
-            lineStyle: { width: 2, type: yearLineTypeMap[p.year] },
+            lineStyle: { width: 2, type: yearLineTypeMap[p.year], color },
+            color,
             emphasis: { focus: 'series' },
           };
         })
@@ -181,15 +219,27 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
           type: 'shadow'
         },
       },
-      yAxis: {
-        type: 'value',
-        minInterval: 1,
-        axisLabel: {
-          formatter: formatYAxisLabel,
+      yAxis: [
+        {
+          type: 'value',
+          minInterval: 1,
+          axisLabel: {
+            formatter: formatYAxisLabel,
+          },
+          position: 'left',
         },
-      },
+        {
+          type: 'value',
+          minInterval: 1,
+          axisLabel: {
+            formatter: formatYAxisLabel,
+          },
+          position: 'right',
+          splitLine: { show: false },
+        }
+      ],
       series,
-      grid: { left: 40, right: 20, top: 60, bottom: 30 },
+      grid: { left: 40, right: 40, top: 60, bottom: 30 },
     });
     function handleResize() {
       chart.resize();
@@ -205,9 +255,14 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
     ? products.some(p => (dataMap[p.id]?.length ?? 0) > 0)
     : (dataMap[pid ?? 0]?.length ?? 0) > 0;
   if (!hasData) {
-    return <div className="h-64 flex items-center justify-center">暂无数据</div>;
+    return <div className="min-h-[240px] h-[40vw] max-h-[360px] md:h-[320px] md:min-h-[240px] md:max-h-[480px] flex items-center justify-center">暂无数据</div>;
   }
-  return <div ref={chartRef} className="h-64 w-full" />;
+  return (
+    <div
+      ref={chartRef}
+      className="min-h-[240px] h-[40vw] max-h-[360px] md:h-[320px] md:min-h-[240px] md:max-h-[480px] w-full"
+    />
+  );
 }
 
 // 辅助函数：格式化 y 轴数字为 k、m、b 单位
