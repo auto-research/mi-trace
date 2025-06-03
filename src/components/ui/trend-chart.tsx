@@ -22,7 +22,6 @@ const miTheme = {
     '#333333', // 深灰
     '#bfbfbf', // 浅灰
     '#f5f5f5', // 背景灰
-    '#ffffff', // 白
     '#ffb980', // 橙黄
     '#d87a80', // 红
     '#8d98b3', // 蓝灰
@@ -90,7 +89,7 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
           name: p.name,
           type: 'bar',
           stack: String(p.year), // 按年份堆叠
-          data: allDates.map((date) => dataByDate[date] ?? 0),
+          data: allDates.map((date) => dataByDate[date] ?? null),
           emphasis: { focus: 'series' },
           barMaxWidth: 18,
         });
@@ -131,13 +130,36 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
       ];
       legend = [];
     }
-    console.log(series);
     chart.setOption({
-      tooltip: { trigger: 'axis' },
+      toolbox: {
+        feature: {
+          dataView: { show: false },
+          magicType: { show: false },
+          saveAsImage: { show: true }
+        },
+      },
+      tooltip: {
+        trigger: 'axis',
+        formatter: (params: any) => {
+          // params 是一个数组，包含所有系列在该点的数据
+          const lineParams = params.filter((item: any) => item.seriesType === 'line');
+          if (lineParams.length === 0) return '';
+          // 构造 tooltip 内容
+          let result = `${lineParams[0].axisValueLabel}<br/>`;
+          lineParams.forEach((item: any) => {
+            result += `
+              <span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background:${item.color}"></span>
+              ${item.seriesName}: ${item.value}<br/>
+            `;
+          });
+          return result;
+        }
+      },
       legend: legend.length > 0 ? {
         data: legend,
         type: 'scroll',
         top: 10,
+        right: 100,
         icon: 'circle',
         itemHeight: 12,
         itemWidth: 12,
@@ -151,9 +173,12 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
         data: allDates.length > 0
           ? allDates
           : (dataMap[pid ?? 0]?.map((item) => item.date) ?? []),
-        boundaryGap: false,
+        boundaryGap: true,
         axisLabel: {
           formatter: (value: string) => formatDateToMMDD(value),
+        },
+        axisPointer: {
+          type: 'shadow'
         },
       },
       yAxis: {
