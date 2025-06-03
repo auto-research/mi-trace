@@ -2,6 +2,7 @@
 import React, { useEffect, useRef } from "react";
 import * as echarts from "echarts";
 import { Product } from "data/product-list";
+import dayjs from "dayjs";
 
 interface TrendChartProps {
   pid?: number;
@@ -14,12 +15,44 @@ interface CommentRecord {
   comments_total: number;
 }
 
+// 小米品牌主题
+const miTheme = {
+  color: [
+    '#ff6900', // 小米橙
+    '#333333', // 深灰
+    '#bfbfbf', // 浅灰
+    '#f5f5f5', // 背景灰
+    '#ffffff', // 白
+    '#ffb980', // 橙黄
+    '#d87a80', // 红
+    '#8d98b3', // 蓝灰
+    '#e5cf0d', // 金黄
+    '#97b552', // 绿
+  ],
+  backgroundColor: '#fff',
+  textStyle: {
+    fontFamily: 'MiSans, Arial, sans-serif',
+  },
+  title: {
+    textStyle: {
+      color: '#ff6900',
+    },
+    subtextStyle: {
+      color: '#333',
+    },
+  },
+};
+
+if (typeof window !== 'undefined' && echarts && !(echarts as any).getTheme?.('mi')) {
+  echarts.registerTheme('mi', miTheme);
+}
+
 export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
   const chartRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!chartRef.current) return;
-    const chart = echarts.init(chartRef.current);
+    const chart = echarts.init(chartRef.current, 'mi');
     // 合并所有日期
     const allDates = Array.from(
       new Set(
@@ -36,7 +69,6 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
       const yearSet = new Set(products.map(p => p.year));
       const years = Array.from(yearSet).sort();
       // 预设线型样式
-      // 按年份分配线型：2024年实线，2023年虚线，其他dotted
       const yearLineTypeMap: Record<number, string> = {};
       years.forEach((year) => {
         if (year === 2024) {
@@ -47,25 +79,42 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
           yearLineTypeMap[year] = 'dotted';
         }
       });
-      series = products.map((p) => {
-        legend.push(`${p.name} (${p.year})`);
+      // 构建柱状图 series：每个产品一个 series，stack 按年份
+      products.forEach((p) => {
         const dataArr = dataMap[p.id] || [];
-        // 按日期对齐
         const dataByDate: Record<string, number> = {};
         dataArr.forEach((item) => {
           dataByDate[item.date] = item.comments_total;
         });
-        return {
-          name: `${p.name} (${p.year})`,
-          type: 'line',
-          data: allDates.map((date) => dataByDate[date] ?? null),
-          smooth: true,
-          showSymbol: false,
-          lineStyle: { width: 2, type: yearLineTypeMap[p.year] },
+        series.push({
+          name: p.name,
+          type: 'bar',
+          stack: String(p.year), // 按年份堆叠
+          data: allDates.map((date) => dataByDate[date] ?? 0),
           emphasis: { focus: 'series' },
-          // areaStyle: { opacity: 0.1 },
-        };
+          barMaxWidth: 18,
+        });
       });
+      // 构建折线图 series
+      series.push(
+        ...products.map((p) => {
+          const dataArr = dataMap[p.id] || [];
+          const dataByDate: Record<string, number> = {};
+          dataArr.forEach((item) => {
+            dataByDate[item.date] = item.comments_total;
+          });
+          legend.push(`${p.name} (${p.year})`);
+          return {
+            name: `${p.name} (${p.year})`,
+            type: 'line',
+            data: allDates.map((date) => dataByDate[date] ?? null),
+            smooth: true,
+            showSymbol: false,
+            lineStyle: { width: 2, type: yearLineTypeMap[p.year] },
+            emphasis: { focus: 'series' },
+          };
+        })
+      );
     } else if (pid) {
       const dataArr = dataMap[pid] || [];
       series = [
@@ -82,6 +131,7 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
       ];
       legend = [];
     }
+    console.log(series);
     chart.setOption({
       tooltip: { trigger: 'axis' },
       legend: legend.length > 0 ? {
@@ -98,8 +148,13 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
       } : undefined,
       xAxis: {
         type: 'category',
-        data: allDates.length > 0 ? allDates : (dataMap[pid ?? 0]?.map((item) => item.date) ?? []),
+        data: allDates.length > 0
+          ? allDates
+          : (dataMap[pid ?? 0]?.map((item) => item.date) ?? []),
         boundaryGap: false,
+        axisLabel: {
+          formatter: (value: string) => formatDateToMMDD(value),
+        },
       },
       yAxis: {
         type: 'value',
@@ -142,4 +197,11 @@ function formatYAxisLabel(value: number): string {
     return (value / 1_000).toFixed(1).replace(/\.0$/, '') + 'k';
   }
   return value.toString();
+}
+
+// 辅助函数：格式化日期为 MM/DD
+function formatDateToMMDD(dateStr: string): string {
+  const d = dayjs(dateStr);
+  if (!d.isValid()) return dateStr;
+  return d.format("MM/DD");
 } 
