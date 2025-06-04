@@ -129,7 +129,7 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
       });
       // 构建折线图 series
       series.push(
-        ...products.flatMap((p) => {
+        ...products.map((p) => {
           const yearProducts = productsByYear[p.year];
           const idx = yearProducts.findIndex(prod => prod.id === p.id);
           const alpha = 1 - idx * 0.15 > 0.5 ? 1 - idx * 0.15 : 0.5;
@@ -139,119 +139,34 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
           dataArr.forEach((item) => {
             dataByDate[item.date] = item.comments_total;
           });
-
-          const totals = allDates.map((d) => dataByDate[d] ?? null);
-          // 计算每日新增
-          const dailyIncrease = totals.map((v, i) => {
-            if (v == null) return null;
-            const prev = i > 0 ? totals[i - 1] : null;
-            return prev == null || v == null ? null : v - (prev ?? 0);
-          });
-          // 7 日滑动平均
-          const movingAvg = dailyIncrease.map((_, i) => {
-            let sum = 0;
-            let count = 0;
-            for (let j = Math.max(0, i - 6); j <= i; j++) {
-              const val = dailyIncrease[j];
-              if (val != null) {
-                sum += val;
-                count++;
-              }
-            }
-            return count > 0 ? parseFloat((sum / count).toFixed(2)) : null;
-          });
-
           legend.push(`${p.name} (${p.year})`);
-          legend.push(`${p.name} 日增`);
-          legend.push(`${p.name} 7日均值`);
-
-          return [
-            {
-              name: `${p.name} (${p.year})`,
-              type: 'line',
-              data: totals,
-              smooth: true,
-              showSymbol: false,
-              lineStyle: { width: 2, type: yearLineTypeMap[p.year], color },
-              color,
-              emphasis: { focus: 'series' },
-            },
-            {
-              name: `${p.name} 日增`,
-              type: 'line',
-              data: dailyIncrease,
-              smooth: true,
-              showSymbol: false,
-              lineStyle: { width: 1, type: 'dashed', color },
-              color,
-              yAxisIndex: 0,
-              markPoint: { data: [{ type: 'max', name: '峰值' }] },
-              emphasis: { focus: 'series' },
-            },
-            {
-              name: `${p.name} 7日均值`,
-              type: 'line',
-              data: movingAvg,
-              smooth: true,
-              showSymbol: false,
-              lineStyle: { width: 2, type: 'solid', color },
-              color,
-              yAxisIndex: 0,
-              emphasis: { focus: 'series' },
-            },
-          ];
+          return {
+            name: `${p.name} (${p.year})`,
+            type: 'line',
+            data: allDates.map((date) => dataByDate[date] ?? null),
+            smooth: true,
+            showSymbol: false,
+            lineStyle: { width: 2, type: yearLineTypeMap[p.year], color },
+            color,
+            emphasis: { focus: 'series' },
+          };
         })
       );
     } else if (pid) {
       const dataArr = dataMap[pid] || [];
-      const totals = dataArr.map((item) => item.comments_total);
-      const dailyIncrease = totals.map((v, i) => {
-        const prev = i > 0 ? totals[i - 1] : null;
-        return prev == null ? null : v - prev;
-      });
-      const movingAvg = dailyIncrease.map((_, i) => {
-        let sum = 0;
-        let count = 0;
-        for (let j = Math.max(0, i - 6); j <= i; j++) {
-          const val = dailyIncrease[j];
-          if (val != null) {
-            sum += val;
-            count++;
-          }
-        }
-        return count > 0 ? parseFloat((sum / count).toFixed(2)) : null;
-      });
       series = [
         {
           name: '评论总数',
           type: 'line',
-          data: totals,
+          data: dataArr.map((item) => item.comments_total),
           smooth: true,
           showSymbol: false,
           lineStyle: { width: 2 },
-          emphasis: { focus: 'series' }
-        },
-        {
-          name: '每日新增',
-          type: 'line',
-          data: dailyIncrease,
-          smooth: true,
-          showSymbol: false,
-          lineStyle: { width: 1, type: 'dashed' },
-          markPoint: { data: [{ type: 'max', name: '峰值' }] },
-          emphasis: { focus: 'series' }
-        },
-        {
-          name: '7日均值',
-          type: 'line',
-          data: movingAvg,
-          smooth: true,
-          showSymbol: false,
-          lineStyle: { width: 2 },
+          // areaStyle: { opacity: 0.1 },
           emphasis: { focus: 'series' }
         },
       ];
-      legend = ['评论总数', '每日新增', '7日均值'];
+      legend = [];
     }
     chart.setOption({
       toolbox: {
@@ -304,10 +219,6 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
           type: 'shadow'
         },
       },
-      dataZoom: [
-        { type: 'inside', xAxisIndex: 0 },
-        { type: 'slider', xAxisIndex: 0 }
-      ],
       yAxis: [
         {
           type: 'value',
