@@ -5,8 +5,7 @@ import { Product } from "data/product-list";
 import dayjs from "dayjs";
 
 interface TrendChartProps {
-  pid?: number;
-  products?: Product[];
+  products: Product[];
   dataMap: Record<number, CommentRecord[]>;
 }
 
@@ -64,7 +63,7 @@ function hexToRgba(hex: string, alpha: number) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
+export function TrendChart({ products, dataMap }: TrendChartProps) {
   const chartRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -78,6 +77,7 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
           .map((item) => item.date)
       )
     ).sort();
+    // console.log(dataMap);
     // 构建 series
     let series: any[] = [];
     let legend: string[] = [];
@@ -114,18 +114,18 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
         dataArr.forEach((item) => {
           dataByDate[item.date] = item.comments_total;
         });
-        series.push({
-          name: p.name,
-          type: 'bar',
-          stack: String(p.year), // 按年份堆叠
-          data: allDates.map((date) => dataByDate[date] ?? null),
-          emphasis: { focus: 'series' },
-          barMaxWidth: 10,
-          yAxisIndex: 1, // 使用右侧 y 轴
-          itemStyle: {
-            color,
-          },
-        });
+        // series.push({
+        //   name: p.name,
+        //   type: 'bar',
+        //   stack: String(p.year), // 按年份堆叠
+        //   data: allDates.map((date) => dataByDate[date] ?? null),
+        //   emphasis: { focus: 'series' },
+        //   barMaxWidth: 10,
+        //   yAxisIndex: 1, // 使用右侧 y 轴
+        //   itemStyle: {
+        //     color,
+        //   },
+        // });
       });
       // 构建折线图 series
       series.push(
@@ -143,7 +143,10 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
           return {
             name: p.name,
             type: 'line',
-            data: allDates.map((date) => dataByDate[date] ?? null),
+            data: allDates.map((date) => {
+              const v = dataByDate[date] ?? 0;
+              return v === 0 ? null : v;
+            }),
             smooth: true,
             showSymbol: false,
             lineStyle: { width: 1, type: yearLineTypeMap[p.year], color },
@@ -152,6 +155,8 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
             endLabel: {
               show: true,
               distance: 0,
+              color: 'inherit',
+              offset: [-50, -10],
               formatter: (params: any) => {
                 return `${params.seriesName}`;
               }
@@ -159,21 +164,6 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
           };
         })
       );
-    } else if (pid) {
-      const dataArr = dataMap[pid] || [];
-      series = [
-        {
-          name: '评论总数',
-          type: 'line',
-          data: dataArr.map((item) => item.comments_total),
-          smooth: true,
-          showSymbol: false,
-          lineStyle: { width: 2 },
-          // areaStyle: { opacity: 0.1 },
-          emphasis: { focus: 'series' }
-        },
-      ];
-      legend = [];
     }
     chart.setOption({
       toolbox: {
@@ -192,7 +182,8 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
           // 构造 tooltip 内容
           let result = `${lineParams[0].axisValueLabel}<br/>`;
           lineParams.forEach((item: any) => {
-            result += `\n<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background:${item.color}"></span>\n              ${item.seriesName}: ${formatNumberWithCommas(item.value)}<br/>\n            `;
+            const value = (item.value === undefined || item.value === null) ? 0 : item.value;
+            result += `\n<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background:${item.color}"></span>\n              ${item.seriesName}: ${formatNumberWithCommas(value)}<br/>\n            `;
           });
           return result;
         }
@@ -212,9 +203,7 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
       } : undefined,
       xAxis: {
         type: 'category',
-        data: allDates.length > 0
-          ? allDates
-          : (dataMap[pid ?? 0]?.map((item) => item.date) ?? []),
+        data: allDates,
         boundaryGap: true,
         axisLabel: {
           formatter: (value: string) => formatDateToMMDD(value),
@@ -226,26 +215,46 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
       yAxis: [
         {
           type: 'value',
-          name: '型号',
+          // name: '型号',
           minInterval: 1,
           axisLabel: {
             formatter: formatYAxisLabel,
           },
           position: 'left',
         },
-        {
-          type: 'value',
-          name: '年款累计',
-          minInterval: 1,
-          axisLabel: {
-            formatter: formatYAxisLabel,
-          },
-          position: 'right',
-          splitLine: { show: false },
-        }
+        // {
+        //   type: 'value',
+        //   name: '年款累计',
+        //   minInterval: 1,
+        //   axisLabel: {
+        //     formatter: formatYAxisLabel,
+        //   },
+        //   position: 'right',
+        //   splitLine: { show: false },
+        // }
       ],
       series,
-      grid: { left: 40, right: 40, top: 60, bottom: 30 },
+      grid: { left: 40, right: 60, top: 60, bottom: 30 },
+      dataZoom: [
+        {
+          type: 'slider',
+          show: true,
+          xAxisIndex: 0,
+          start: 0,
+          end: 100,
+          height: 24,
+          bottom: 0,
+          handleSize: '80%',
+          showDetail: false,
+          brushSelect: false,
+        },
+        {
+          type: 'inside',
+          xAxisIndex: 0,
+          start: 0,
+          end: 100,
+        }
+      ],
     });
     function handleResize() {
       chart.resize();
@@ -255,11 +264,9 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
       chart.dispose();
       window.removeEventListener('resize', handleResize);
     };
-  }, [dataMap, pid, JSON.stringify(products)]);
+  }, [dataMap, JSON.stringify(products)]);
 
-  const hasData = products && products.length > 0
-    ? products.some(p => (dataMap[p.id]?.length ?? 0) > 0)
-    : (dataMap[pid ?? 0]?.length ?? 0) > 0;
+  const hasData = products.some(p => (dataMap[p.id]?.length ?? 0) > 0);
   if (!hasData) {
     return <div className="min-h-[240px] h-[40vw] max-h-[360px] md:h-[320px] md:min-h-[240px] md:max-h-[480px] flex items-center justify-center">暂无数据</div>;
   }
