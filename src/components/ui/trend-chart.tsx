@@ -3,6 +3,7 @@ import React, { useEffect, useRef } from "react";
 import * as echarts from "echarts";
 import { Product } from "data/product-list";
 import dayjs from "dayjs";
+import { usePrefersDarkMode } from "../../hooks/use-prefers-dark-mode";
 
 interface TrendChartProps {
   pid?: number;
@@ -42,8 +43,30 @@ const miTheme = {
   },
 };
 
-if (typeof window !== 'undefined' && echarts && !(echarts as any).getTheme?.('mi')) {
-  echarts.registerTheme('mi', miTheme);
+const miDarkTheme = {
+  ...miTheme,
+  backgroundColor: '#000',
+  textStyle: {
+    ...miTheme.textStyle,
+    color: '#fff',
+  },
+  title: {
+    textStyle: {
+      color: '#ff6900',
+    },
+    subtextStyle: {
+      color: '#fff',
+    },
+  },
+};
+
+if (typeof window !== 'undefined' && echarts) {
+  if (!(echarts as any).getTheme?.('mi')) {
+    echarts.registerTheme('mi', miTheme);
+  }
+  if (!(echarts as any).getTheme?.('mi-dark')) {
+    echarts.registerTheme('mi-dark', miDarkTheme);
+  }
 }
 
 // 年份主色映射
@@ -66,10 +89,11 @@ function hexToRgba(hex: string, alpha: number) {
 
 export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
   const chartRef = useRef<HTMLDivElement>(null);
+  const isDark = usePrefersDarkMode();
 
   useEffect(() => {
     if (!chartRef.current) return;
-    const chart = echarts.init(chartRef.current, 'mi');
+    const chart = echarts.init(chartRef.current, isDark ? 'mi-dark' : 'mi');
     // 合并所有日期
     const allDates = Array.from(
       new Set(
@@ -255,7 +279,7 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
       chart.dispose();
       window.removeEventListener('resize', handleResize);
     };
-  }, [dataMap, pid, JSON.stringify(products)]);
+  }, [dataMap, pid, JSON.stringify(products), isDark]);
 
   const hasData = products && products.length > 0
     ? products.some(p => (dataMap[p.id]?.length ?? 0) > 0)
