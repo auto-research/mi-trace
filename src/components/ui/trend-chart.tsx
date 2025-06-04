@@ -120,7 +120,7 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
           stack: String(p.year), // 按年份堆叠
           data: allDates.map((date) => dataByDate[date] ?? null),
           emphasis: { focus: 'series' },
-          barMaxWidth: 18,
+          barMaxWidth: 10,
           yAxisIndex: 1, // 使用右侧 y 轴
           itemStyle: {
             color,
@@ -139,16 +139,23 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
           dataArr.forEach((item) => {
             dataByDate[item.date] = item.comments_total;
           });
-          legend.push(`${p.name} (${p.year})`);
+          legend.push(p.name);
           return {
-            name: `${p.name} (${p.year})`,
+            name: p.name,
             type: 'line',
             data: allDates.map((date) => dataByDate[date] ?? null),
             smooth: true,
             showSymbol: false,
-            lineStyle: { width: 2, type: yearLineTypeMap[p.year], color },
+            lineStyle: { width: 1, type: yearLineTypeMap[p.year], color },
             color,
             emphasis: { focus: 'series' },
+            endLabel: {
+              show: true,
+              distance: 0,
+              formatter: (params: any) => {
+                return `${params.seriesName}`;
+              }
+            }
           };
         })
       );
@@ -185,10 +192,7 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
           // 构造 tooltip 内容
           let result = `${lineParams[0].axisValueLabel}<br/>`;
           lineParams.forEach((item: any) => {
-            result += `
-              <span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background:${item.color}"></span>
-              ${item.seriesName}: ${item.value}<br/>
-            `;
+            result += `\n<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background:${item.color}"></span>\n              ${item.seriesName}: ${formatNumberWithCommas(item.value)}<br/>\n            `;
           });
           return result;
         }
@@ -222,6 +226,7 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
       yAxis: [
         {
           type: 'value',
+          name: '型号',
           minInterval: 1,
           axisLabel: {
             formatter: formatYAxisLabel,
@@ -230,6 +235,7 @@ export function TrendChart({ pid, products, dataMap }: TrendChartProps) {
         },
         {
           type: 'value',
+          name: '年款累计',
           minInterval: 1,
           axisLabel: {
             formatter: formatYAxisLabel,
@@ -284,4 +290,15 @@ function formatDateToMMDD(dateStr: string): string {
   const d = dayjs(dateStr);
   if (!d.isValid()) return dateStr;
   return d.format("MM/DD");
+}
+
+// 千分位分隔
+function formatNumberWithCommas(value: number | string): string {
+  if (typeof value === 'number') {
+    return value.toLocaleString('en-US');
+  }
+  if (!isNaN(Number(value))) {
+    return Number(value).toLocaleString('en-US');
+  }
+  return value;
 } 
