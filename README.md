@@ -30,3 +30,18 @@ npm run crawl:comments -- --year=2024
 ```
 
 抓取结果会在控制台输出。
+
+## 手动更新评论数（单条）
+
+如需手动修正某个产品某天的评论数，可使用如下命令：
+
+```bash
+npx tsx src/scripts/update-comment-count.ts --id=12345 --date=2024-06-01 --count=999
+```
+
+参数说明：
+- `--id`：产品 id
+- `--date`：日期（如 2024-06-01）
+- `--count`：评论数
+
+该命令会直接写入/覆盖数据库对应记录。
