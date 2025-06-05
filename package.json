@@ -7,10 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "crawl:comments": "npx tsx src/scripts/crawl-all-comments.ts"
+    "crawl:comments": "npx tsx src/scripts/crawl-all-comments.ts",
+    "import:market-share": "npx tsx src/scripts/import-market-share.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.14",
+    "@radix-ui/react-tabs": "^1.1.12",
     "better-sqlite3": "^11.10.0",
     "dayjs": "^1.11.13",
     "echarts": "^5.6.0",

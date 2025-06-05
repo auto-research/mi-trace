@@ -3,10 +3,20 @@ import TrendCharts from './_components/trend-charts';
 import Database from 'better-sqlite3';
 import { join } from 'path';
 import { Metadata } from 'next';
+import { Brand, brandList } from '../../../data/brand';
+import { BrandShareTrendChart } from './_components/brand-share-trend-chart';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 
 interface CommentRecord {
   date: string;
   comments_total: number;
+}
+
+interface MarketShareRecord {
+  year: number;
+  week: number;
+  brand: number;
+  share: number;
 }
 
 function getAllCommentsMap(pids: number[]): Record<number, CommentRecord[]> {
@@ -21,6 +31,28 @@ function getAllCommentsMap(pids: number[]): Record<number, CommentRecord[]> {
   return map;
 }
 
+function getBrandShareTrends(): {
+  trends: Record<number, { x: string; y: number }[]>;
+  weekDateMap: Record<string, { date_start: string; date_end: string }>;
+} {
+  const DB_PATH = join(process.cwd(), 'data', 'market_share.db');
+  const db = new Database(DB_PATH);
+  const rows = db.prepare('SELECT year, week, brand, share, date_start, date_end FROM market_share ORDER BY year, week').all() as (MarketShareRecord & { date_start: string; date_end: string })[];
+  db.close();
+  // 按品牌分组
+  const brandMap: Record<number, { x: string; y: number }[]> = {};
+  const weekDateMap: Record<string, { date_start: string; date_end: string }> = {};
+  for (const row of rows) {
+    const weekKey = `W${row.week}`;
+    if (!brandMap[row.brand]) brandMap[row.brand] = [];
+    brandMap[row.brand].push({ x: weekKey, y: row.share });
+    if (!weekDateMap[weekKey]) {
+      weekDateMap[weekKey] = { date_start: row.date_start, date_end: row.date_end };
+    }
+  }
+  return { trends: brandMap, weekDateMap };
+}
+
 export const metadata: Metadata = {
   title: "小米产品评论趋势分析 - MI Trace",
   description: "基于 ECharts 的小米产品评论趋势可视化，支持多产品对比、年度分析，数据一目了然。",
@@ -30,11 +62,25 @@ export const metadata: Metadata = {
 export default function DashboardPage() {
   const allPids = productList.map(p => p.id);
   const dataMap = getAllCommentsMap(allPids);
+  const { trends: brandShareTrends, weekDateMap } = getBrandShareTrends();
 
   return (
-    <div className="max-w-6xl mx-auto p-4 space-y-8">
-      <h1 className="text-3xl font-bold mb-8">评论趋势跟踪</h1>
-      <TrendCharts productList={productList} dataMap={dataMap} />
+    <div className="max-w-6xl mx-auto p-4">
+      <Tabs defaultValue="trend" className="w-full">
+        <TabsList className="mb-6 flex gap-2">
+          <TabsTrigger value="trend">小米手机评论趋势跟踪</TabsTrigger>
+          <TabsTrigger value="share">手机品牌周度市场份额趋势</TabsTrigger>
+        </TabsList>
+        <TabsContent value="trend">
+          <TrendCharts productList={productList} dataMap={dataMap} />
+        </TabsContent>
+        <TabsContent value="share">
+          <div className="bg-white rounded-lg shadow p-4">
+            <h2 className="text-xl font-semibold mb-4">品牌周度市场份额趋势</h2>
+            <BrandShareTrendChart data={brandShareTrends} weekDateMap={weekDateMap} />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 } 
