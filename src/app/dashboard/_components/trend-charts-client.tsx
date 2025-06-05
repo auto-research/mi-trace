@@ -18,9 +18,9 @@ const TrendChart = dynamic(() => import('@components/ui/trend-chart').then(mod =
 });
 
 export default function TrendChartsClient({ productList, dataMap }: TrendChartsClientProps) {
-  const [selectedBrand, setSelectedBrand] = useState<string>('全部');
+  const [selectedBrand, setSelectedBrand] = useState<string>('Xiaomi');
   const brands = Array.from(new Set(productList.map(p => p.brand)));
-  const filteredList = selectedBrand === '全部' ? productList : productList.filter(p => p.brand === selectedBrand);
+  const filteredList = productList.filter(p => p.brand === selectedBrand);
 
   // 按 subCategory 分组
   const subCategoryMap: Record<string, Product[]> = {};
@@ -33,18 +33,20 @@ export default function TrendChartsClient({ productList, dataMap }: TrendChartsC
   return (
     <div>
       <div className="mb-6 flex items-center gap-2">
-        <label htmlFor="brand-select" className="font-medium">品牌筛选：</label>
-        <select
-          id="brand-select"
-          className="border rounded px-2 py-1 dark:bg-black dark:border-gray-700"
-          value={selectedBrand}
-          onChange={e => setSelectedBrand(e.target.value)}
-        >
-          <option value="全部">全部</option>
-          {brands.map(brand => (
-            <option key={brand} value={brand}>{brand}</option>
-          ))}
-        </select>
+        {brands.map(brand => (
+          <button
+            key={brand}
+            className={`px-5 py-2 rounded-lg border text-base font-medium transition-colors duration-150 cursor-pointer
+              ${selectedBrand === brand
+                ? 'bg-[#ff6900] text-white border-[#ff6900] shadow-sm'
+                : 'bg-white text-[#ff6900] border-[#ff6900] hover:bg-[#fff3e6]'}
+            `}
+            style={{ minWidth: 80 }}
+            onClick={() => setSelectedBrand(brand)}
+          >
+            {brand === 'Xiaomi' ? 'Xiaomi' : brand.charAt(0).toUpperCase() + brand.slice(1).toLowerCase()}
+          </button>
+        ))}
       </div>
       <div className="grid grid-cols-1 gap-8">
         {subCategories.map((sub) => (

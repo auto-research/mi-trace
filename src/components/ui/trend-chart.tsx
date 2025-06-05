@@ -242,26 +242,26 @@ export function TrendChart({ products, dataMap }: TrendChartProps) {
       ],
       series,
       grid: { left: 40, right: 30, top: 60, bottom: 30 },
-      dataZoom: [
-        {
-          type: 'slider',
-          show: true,
-          xAxisIndex: 0,
-          start: 0,
-          end: 100,
-          height: 24,
-          bottom: 0,
-          handleSize: '80%',
-          showDetail: false,
-          brushSelect: false,
-        },
-        {
-          type: 'inside',
-          xAxisIndex: 0,
-          start: 0,
-          end: 100,
-        }
-      ],
+      // dataZoom: [
+      //   {
+      //     type: 'slider',
+      //     show: true,
+      //     xAxisIndex: 0,
+      //     start: 0,
+      //     end: 100,
+      //     height: 24,
+      //     bottom: 0,
+      //     handleSize: '80%',
+      //     showDetail: false,
+      //     brushSelect: false,
+      //   },
+      //   {
+      //     type: 'inside',
+      //     xAxisIndex: 0,
+      //     start: 0,
+      //     end: 100,
+      //   }
+      // ],
     });
     function handleResize() {
       chart.resize();
