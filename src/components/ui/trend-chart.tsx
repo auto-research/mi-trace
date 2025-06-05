@@ -69,15 +69,29 @@ export function TrendChart({ products, dataMap }: TrendChartProps) {
   useEffect(() => {
     if (!chartRef.current) return;
     const chart = echarts.init(chartRef.current, 'mi');
-    // 合并所有日期
-    const allDates = Array.from(
-      new Set(
-        Object.values(dataMap)
-          .flat()
-          .map((item) => item.date)
-      )
-    ).sort();
-    // console.log(dataMap);
+    // 计算所有产品的周数横坐标
+    // 1. 找到所有产品的所有周数（如第1周、第2周...）
+    const weekLabelSet = new Set<string>();
+    const productWeekMap: Record<number, Record<string, number>> = {};
+    products.forEach((p) => {
+      const release = dayjs(p.releaseDate);
+      const arr = dataMap[p.id] || [];
+      productWeekMap[p.id] = {};
+      arr.forEach((item) => {
+        const d = dayjs(item.date);
+        // 计算第几周（首日为第1周）
+        const week = Math.floor(d.diff(release, 'day') / 7) + 1;
+        if (week >= 1) {
+          const label = `第${week}周`;
+          weekLabelSet.add(label);
+          productWeekMap[p.id][label] = item.comments_total;
+        }
+      });
+    });
+    const allWeeks = Array.from(weekLabelSet).sort((a, b) => {
+      // 提取数字排序
+      return parseInt(a.replace(/\D/g, '')) - parseInt(b.replace(/\D/g, ''));
+    });
     // 构建 series
     let series: any[] = [];
     let legend: string[] = [];
@@ -134,17 +148,12 @@ export function TrendChart({ products, dataMap }: TrendChartProps) {
           const idx = yearProducts.findIndex(prod => prod.id === p.id);
           const alpha = 1 - idx * 0.15 > 0.5 ? 1 - idx * 0.15 : 0.5;
           const color = hexToRgba(yearColorMap[p.year] || '#888', alpha);
-          const dataArr = dataMap[p.id] || [];
-          const dataByDate: Record<string, number> = {};
-          dataArr.forEach((item) => {
-            dataByDate[item.date] = item.comments_total;
-          });
           legend.push(p.name);
           return {
             name: p.name,
             type: 'line',
-            data: allDates.map((date) => {
-              const v = dataByDate[date] ?? 0;
+            data: allWeeks.map((week) => {
+              const v = productWeekMap[p.id][week] ?? 0;
               return v === 0 ? null : v;
             }),
             smooth: true,
@@ -176,10 +185,8 @@ export function TrendChart({ products, dataMap }: TrendChartProps) {
       tooltip: {
         trigger: 'axis',
         formatter: (params: any) => {
-          // params 是一个数组，包含所有系列在该点的数据
           const lineParams = params.filter((item: any) => item.seriesType === 'line');
           if (lineParams.length === 0) return '';
-          // 构造 tooltip 内容
           let result = `${lineParams[0].axisValueLabel}<br/>`;
           lineParams.forEach((item: any) => {
             const value = (item.value === undefined || item.value === null) ? 0 : item.value;
@@ -203,10 +210,10 @@ export function TrendChart({ products, dataMap }: TrendChartProps) {
       } : undefined,
       xAxis: {
         type: 'category',
-        data: allDates,
+        data: allWeeks,
         boundaryGap: true,
         axisLabel: {
-          formatter: (value: string) => formatDateToMMDD(value),
+          formatter: (value: string) => value,
         },
         axisPointer: {
           type: 'shadow'
@@ -234,7 +241,7 @@ export function TrendChart({ products, dataMap }: TrendChartProps) {
         // }
       ],
       series,
-      grid: { left: 40, right: 60, top: 60, bottom: 30 },
+      grid: { left: 40, right: 30, top: 60, bottom: 30 },
       dataZoom: [
         {
           type: 'slider',
