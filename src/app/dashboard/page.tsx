@@ -68,8 +68,8 @@ export default function DashboardPage() {
     <div className="max-w-6xl mx-auto p-4">
       <Tabs defaultValue="trend" className="w-full">
         <TabsList className="mb-6 flex gap-2">
-          <TabsTrigger value="trend">小米手机评论趋势跟踪</TabsTrigger>
-          <TabsTrigger value="share">手机品牌周度市场份额趋势</TabsTrigger>
+          <TabsTrigger value="trend">小米手机趋势跟踪</TabsTrigger>
+          <TabsTrigger value="share">手机品牌周度份额</TabsTrigger>
         </TabsList>
         <TabsContent value="trend">
           <TrendCharts productList={productList} dataMap={dataMap} />
@@ -78,6 +78,7 @@ export default function DashboardPage() {
           <div className="bg-white rounded-lg shadow p-4">
             <h2 className="text-xl font-semibold mb-4">品牌周度市场份额趋势</h2>
             <BrandShareTrendChart data={brandShareTrends} weekDateMap={weekDateMap} />
+            <div className="text-xs text-gray-400 mt-2 text-right">数据来源：微博（RD 观测）</div>
           </div>
         </TabsContent>
       </Tabs>
