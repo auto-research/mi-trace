@@ -53,6 +53,19 @@ function getBrandShareTrends(): {
   return { trends: brandMap, weekDateMap };
 }
 
+function getLastCrawlTime(): string | null {
+  const DB_PATH = join(process.cwd(), 'data', 'comments.db');
+  const db = new Database(DB_PATH);
+  try {
+    const row = db.prepare('SELECT crawl_time FROM crawl_log ORDER BY id DESC LIMIT 1').get();
+    db.close();
+    return row?.crawl_time ?? null;
+  } catch {
+    db.close();
+    return null;
+  }
+}
+
 export const metadata: Metadata = {
   title: "小米产品评论趋势分析 - MI Trace",
   description: "基于 ECharts 的小米产品评论趋势可视化，支持多产品对比、年度分析，数据一目了然。",
@@ -63,6 +76,7 @@ export default function DashboardPage() {
   const allPids = productList.map(p => p.id);
   const dataMap = getAllCommentsMap(allPids);
   const { trends: brandShareTrends, weekDateMap } = getBrandShareTrends();
+  const lastCrawlTime = getLastCrawlTime();
 
   return (
     <div className="max-w-6xl mx-auto p-4">
@@ -72,7 +86,7 @@ export default function DashboardPage() {
           <TabsTrigger value="share">手机品牌周度份额</TabsTrigger>
         </TabsList>
         <TabsContent value="trend">
-          <TrendCharts productList={productList} dataMap={dataMap} />
+          <TrendCharts productList={productList} dataMap={dataMap} lastCrawlTime={lastCrawlTime} />
         </TabsContent>
         <TabsContent value="share">
           <div className="bg-white rounded-lg shadow p-4">

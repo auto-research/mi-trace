@@ -11,13 +11,14 @@ interface CommentRecord {
 interface TrendChartsClientProps {
   productList: Product[];
   dataMap: Record<number, CommentRecord[]>;
+  lastCrawlTime?: string | null;
 }
 
 const TrendChart = dynamic(() => import('@components/ui/trend-chart').then(mod => mod.TrendChart), {
   loading: () => <div className="h-64 flex items-center justify-center">加载中...</div>,
 });
 
-export default function TrendChartsClient({ productList, dataMap }: TrendChartsClientProps) {
+export default function TrendChartsClient({ productList, dataMap, lastCrawlTime }: TrendChartsClientProps) {
   const [selectedBrand, setSelectedBrand] = useState<string>('Xiaomi');
   const brands = Array.from(new Set(productList.map(p => p.brand)));
   const filteredList = productList.filter(p => p.brand === selectedBrand);
@@ -32,6 +33,11 @@ export default function TrendChartsClient({ productList, dataMap }: TrendChartsC
 
   return (
     <div>
+      {lastCrawlTime && (
+        <div className="text-xs text-gray-400 mb-2 text-right">
+          评论数据更新时间：{new Date(lastCrawlTime).toLocaleString('zh-CN', { hour12: false })}
+        </div>
+      )}
       <div className="mb-6 flex items-center gap-2">
         {brands.map(brand => (
           <button

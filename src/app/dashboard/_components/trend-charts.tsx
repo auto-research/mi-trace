@@ -9,9 +9,10 @@ interface CommentRecord {
 interface TrendChartsProps {
   productList: Product[];
   dataMap: Record<number, CommentRecord[]>;
+  lastCrawlTime?: string | null;
 }
 
 
-export default function TrendCharts({ productList, dataMap }: TrendChartsProps) {
-  return <TrendChartsClient productList={productList} dataMap={dataMap} />;
+export default function TrendCharts({ productList, dataMap, lastCrawlTime }: TrendChartsProps) {
+  return <TrendChartsClient productList={productList} dataMap={dataMap} lastCrawlTime={lastCrawlTime} />;
 } 

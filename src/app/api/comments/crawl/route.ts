@@ -16,6 +16,10 @@ function getDb() {
     product_id TEXT,
     PRIMARY KEY(date, pid)
   )`).run();
+  db.prepare(`CREATE TABLE IF NOT EXISTS crawl_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    crawl_time TEXT
+  )`).run();
   return db;
 }
 
@@ -49,6 +53,7 @@ export async function PUT(req: NextRequest) {
 
   const date = new Date().toISOString().slice(0, 10);
   const db = getDb();
+  db.prepare('INSERT INTO crawl_log (crawl_time) VALUES (?)').run(new Date().toISOString());
   const results: any[] = [];
 
   for (const pid of pids) {
