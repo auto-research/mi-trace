@@ -6,6 +6,7 @@ import { Metadata } from 'next';
 import { Brand, brandList } from '../../../data/brand';
 import { BrandShareTrendChart } from './_components/brand-share-trend-chart';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
+import { BrandShareBarRaceChart } from './_components/brand-share-bar-race-chart';
 
 interface CommentRecord {
   date: string;
@@ -57,7 +58,7 @@ function getLastCrawlTime(): string | null {
   const DB_PATH = join(process.cwd(), 'data', 'comments.db');
   const db = new Database(DB_PATH);
   try {
-    const row = db.prepare('SELECT crawl_time FROM crawl_log ORDER BY id DESC LIMIT 1').get();
+    const row = db.prepare('SELECT crawl_time FROM crawl_log ORDER BY id DESC LIMIT 1').get() as { crawl_time: string } | undefined;
     db.close();
     return row?.crawl_time ?? null;
   } catch {
@@ -67,9 +68,9 @@ function getLastCrawlTime(): string | null {
 }
 
 export const metadata: Metadata = {
-  title: "小米产品评论趋势分析 - MI Trace",
-  description: "基于 ECharts 的小米产品评论趋势可视化，支持多产品对比、年度分析，数据一目了然。",
-  keywords: ["小米", "评论趋势", "数据可视化", "ECharts", "产品对比", "年度分析"],
+  title: "小米产品趋势分析 - MI Trace",
+  description: "基于 ECharts 的小米产品评论趋势可视化，支持多产品对比、年度分析，数据一目了然。评论数据更新时间自动展示。",
+  keywords: ["小米", "评论趋势", "数据可视化", "ECharts", "产品对比", "年度分析", "评论数据更新时间"],
 };
 
 export default function DashboardPage() {
@@ -90,8 +91,19 @@ export default function DashboardPage() {
         </TabsContent>
         <TabsContent value="share">
           <div className="bg-white rounded-lg shadow p-4">
-            <h2 className="text-xl font-semibold mb-4">品牌周度市场份额趋势</h2>
-            <BrandShareTrendChart data={brandShareTrends} weekDateMap={weekDateMap} />
+            <h2 className="text-xl font-semibold mb-2">品牌周度市场份额趋势</h2>
+            <Tabs defaultValue="line" className="w-full">
+              <TabsList className="mb-4 flex gap-2 bg-transparent p-0">
+                <TabsTrigger value="line" className="px-3 py-1 rounded text-sm font-normal bg-gray-100 data-[state=active]:bg-white data-[state=active]:text-orange-500 data-[state=inactive]:text-gray-400 data-[state=inactive]:hover:bg-gray-200 shadow-none border-none">折线图</TabsTrigger>
+                <TabsTrigger value="bar-race" className="px-3 py-1 rounded text-sm font-normal bg-gray-100 data-[state=active]:bg-white data-[state=active]:text-orange-500 data-[state=inactive]:text-gray-400 data-[state=inactive]:hover:bg-gray-200 shadow-none border-none">动态条形图</TabsTrigger>
+              </TabsList>
+              <TabsContent value="line">
+                <BrandShareTrendChart data={brandShareTrends} weekDateMap={weekDateMap} />
+              </TabsContent>
+              <TabsContent value="bar-race">
+                <BrandShareBarRaceChart data={brandShareTrends} weekDateMap={weekDateMap} />
+              </TabsContent>
+            </Tabs>
             <div className="text-xs text-gray-400 mt-2 text-right">数据来源：微博（RD 观测）</div>
           </div>
         </TabsContent>

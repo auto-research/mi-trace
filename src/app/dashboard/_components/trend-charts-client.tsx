@@ -32,12 +32,7 @@ export default function TrendChartsClient({ productList, dataMap, lastCrawlTime 
   const subCategories = Object.keys(subCategoryMap);
 
   return (
-    <div>
-      {lastCrawlTime && (
-        <div className="text-xs text-gray-400 mb-2 text-right">
-          评论数据更新时间：{new Date(lastCrawlTime).toLocaleString('zh-CN', { hour12: false })}
-        </div>
-      )}
+    <>
       <div className="mb-6 flex items-center gap-2">
         {brands.map(brand => (
           <button
@@ -56,7 +51,7 @@ export default function TrendChartsClient({ productList, dataMap, lastCrawlTime 
       </div>
       <div className="grid grid-cols-1 gap-8">
         {subCategories.map((sub) => (
-          <div key={sub} className="bg-white dark:bg-black rounded-lg shadow p-4 relative">
+          <div key={sub} className="bg-white rounded-lg shadow p-4 relative">
             <h2 className="text-xl font-semibold mb-2">{sub}</h2>
             <Suspense fallback={<div className="h-64 flex items-center justify-center">加载中...</div>}>
               <TrendChart
@@ -67,6 +62,11 @@ export default function TrendChartsClient({ productList, dataMap, lastCrawlTime 
           </div>
         ))}
       </div>
-    </div>
+      {lastCrawlTime && (
+        <div className="text-xs text-gray-400 mt-2 text-right">
+          评论数据更新时间：{new Date(lastCrawlTime).toLocaleString('zh-CN', { hour12: false })}
+        </div>
+      )}
+    </>
   );
 } 

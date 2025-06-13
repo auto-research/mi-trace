@@ -80,7 +80,7 @@ export function BrandShareTrendChart({ data, weekDateMap }: BrandShareTrendChart
         axisLabel: { formatter: (v: number) => v + "%" },
       },
       series,
-      grid: { left: 40, right: 30, top: 60, bottom: 30 },
+      grid: { left: 40, right: 10, top: 60, bottom: 30 },
     });
     function handleResize() { chart.resize(); }
     window.addEventListener("resize", handleResize);
