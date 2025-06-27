@@ -27,5 +27,7 @@ export const productList = [
   { "id": 19835, "name": "REDMI Turbo 3", brand: "REDMI", subCategory: "REDMI Turbo", year: 2023, releaseDate: "2024-04-10" },
   { "id": 20844, "name": "REDMI Turbo 4", brand: "REDMI", subCategory: "REDMI Turbo", year: 2024, releaseDate: "2025-01-02" },
   { "id": 21136, "name": "REDMI Turbo 4 Pro", brand: "REDMI", subCategory: "REDMI Turbo", year: 2024, releaseDate: "2025-04-24" },
+  { "id": 21432, "name": "REDMI K80 Ultra", brand: "REDMI", subCategory: "REDMI K", year: 2024, releaseDate: "2025-06-26" },
+  { "id": 21423, "name": "Xiaomi MIX Flip 2", brand: "Xiaomi", subCategory: "Xiaomi MIX", year: 2024, releaseDate: "2025-06-26" },
 ] as Product[];
 
