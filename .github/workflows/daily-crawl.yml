@@ -9,6 +9,8 @@ on:
 jobs:
   crawl-comments:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     
     steps:
       - name: 检出代码
@@ -30,4 +32,25 @@ jobs:
         run: npm run crawl:comments:actions
         env:
           # 如果需要环境变量，可以在这里添加
-          NODE_ENV: production 
+          NODE_ENV: production
+          
+      - name: 配置 Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+      - name: 检查数据库文件变更
+        id: check_changes
+        run: |
+          git add data/comments.db
+          if git diff --staged --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: 提交数据库文件
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git commit -m "🤖 自动更新评论数据 - $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          git push 

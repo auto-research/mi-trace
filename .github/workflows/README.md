@@ -25,12 +25,18 @@ schedule:
 3. **安装依赖**: 使用 `npm ci` 安装项目依赖
 4. **构建项目**: 执行 `npm run build` 构建项目
 5. **执行抓取**: 运行 `npm run crawl:comments:actions` 抓取评论数据
+6. **配置 Git**: 设置 Git 用户信息
+7. **检查变更**: 检查数据库文件是否有更新
+8. **自动提交**: 如果有变更，自动提交到 Git 仓库
 
 ### 注意事项
 - 工作流会在 GitHub Actions 的 Ubuntu 环境中运行
 - 数据库文件会保存在 `data/comments.db` 中
 - 抓取日志会记录在 `crawl_log` 表中
 - 如果抓取失败，工作流会返回错误状态
+- 每次抓取完成后，会自动检查数据库文件是否有更新
+- 如果有更新，会自动提交到 Git 仓库，提交信息包含时间戳
+- 工作流需要 `contents: write` 权限才能推送到仓库
 
 ### 自定义配置
 如果需要修改执行时间，可以编辑 `.github/workflows/daily-crawl.yml` 文件中的 cron 表达式：
