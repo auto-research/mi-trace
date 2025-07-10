@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "crawl:comments": "npx tsx src/scripts/crawl-all-comments.ts",
+    "crawl:comments:actions": "npx tsx src/scripts/crawl-all-comments-actions.ts",
     "import:market-share": "npx tsx src/scripts/import-market-share.ts"
   },
   "dependencies": {

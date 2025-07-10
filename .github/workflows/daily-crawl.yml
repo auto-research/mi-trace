@@ -1,0 +1,33 @@
+name: 每日评论抓取
+
+on:
+  schedule:
+    # 每天 0 点执行 (UTC 时间)
+    - cron: '0 0 * * *'
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  crawl-comments:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: 安装依赖
+        run: npm ci
+        
+      - name: 构建项目
+        run: npm run build
+        
+      - name: 执行评论抓取
+        run: npm run crawl:comments:actions
+        env:
+          # 如果需要环境变量，可以在这里添加
+          NODE_ENV: production 
