@@ -41,8 +41,12 @@ const miTheme = {
   },
 };
 
-if (typeof window !== 'undefined' && echarts && !(echarts as any).getTheme?.('mi')) {
-  echarts.registerTheme('mi', miTheme);
+if (typeof window !== 'undefined' && echarts) {
+  try {
+    echarts.registerTheme('mi', miTheme);
+  } catch (error) {
+    // Theme might already be registered, ignore error
+  }
 }
 
 // 年份主色映射
@@ -272,7 +276,7 @@ export function TrendChart({ products, dataMap }: TrendChartProps) {
       chart.dispose();
       window.removeEventListener('resize', handleResize);
     };
-  }, [dataMap, JSON.stringify(products)]);
+  }, [dataMap, products]);
 
   const hasData = products.some(p => (dataMap[p.id]?.length ?? 0) > 0);
   if (!hasData) {
