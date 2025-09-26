@@ -106,9 +106,9 @@ export function TrendChart({ products, dataMap }: TrendChartProps) {
       // 预设线型样式
       const yearLineTypeMap: Record<number, string> = {};
       years.forEach((year) => {
-        if (year === 2024) {
+        if (year === 2025) {
           yearLineTypeMap[year] = 'solid';
-        } else if (year === 2023) {
+        } else if (year === 2024) {
           yearLineTypeMap[year] = 'dashed';
         } else {
           yearLineTypeMap[year] = 'dotted';
