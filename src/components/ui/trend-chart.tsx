@@ -2,7 +2,16 @@
 import React, { useEffect, useRef } from "react";
 import * as echarts from "echarts";
 import { Product } from "data/product-list";
+import { events } from "data/events";
 import dayjs from "dayjs";
+
+interface AnnotationConfig {
+  productId: number;
+  date: string; // 使用具体日期，格式如 "2024-01-15"
+  text: string;
+  type?: 'line' | 'mark' | 'text';
+  position?: 'top' | 'bottom' | 'left' | 'right';
+}
 
 interface TrendChartProps {
   products: Product[];
@@ -153,6 +162,51 @@ export function TrendChart({ products, dataMap }: TrendChartProps) {
           const alpha = 1 - idx * 0.15 > 0.5 ? 1 - idx * 0.15 : 0.5;
           const color = hexToRgba(yearColorMap[p.year] || '#888', alpha);
           legend.push(p.name);
+          
+          // 为该产品构建标注点
+          const markPoints = events
+            .filter(event => event.productId === p.id)
+            .map((event) => {
+              // 根据日期计算该产品发布后的周数
+              const release = dayjs(p.releaseDate);
+              const eventDate = dayjs(event.date);
+              const weekNumber = Math.floor(eventDate.diff(release, 'day') / 7) + 1;
+              const weekLabel = `第${weekNumber}周`;
+              
+              // 检查该周数是否在图表数据范围内
+              const weekIndex = allWeeks.findIndex(week => week === weekLabel);
+              if (weekIndex === -1) return null;
+              
+              const productData = productWeekMap[p.id];
+              const value = productData ? productData[weekLabel] : 0;
+              
+              return {
+                name: event.text,
+                coord: [weekIndex, value],
+                symbol: 'pin',
+                symbolSize: 30,
+                itemStyle: {
+                  color: color,
+                  borderColor: color,
+                  borderWidth: 2,
+                },
+                label: {
+                  show: true,
+                  position: 'top',
+                  formatter: event.text,
+                  fontSize: 12,
+                  fontWeight: 'bold',
+                  color: color,
+                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                  borderColor: color,
+                  borderWidth: 1,
+                  borderRadius: 4,
+                  padding: [4, 8],
+                },
+              };
+            })
+            .filter(Boolean);
+          
           return {
             name: p.name,
             type: 'line',
@@ -165,6 +219,11 @@ export function TrendChart({ products, dataMap }: TrendChartProps) {
             lineStyle: { width: 1, type: yearLineTypeMap[p.year], color },
             color,
             emphasis: { focus: 'series' },
+            markPoint: markPoints.length > 0 ? {
+              data: markPoints,
+              symbol: 'pin',
+              symbolSize: 30,
+            } : undefined,
             endLabel: {
               show: true,
               distance: 0,
@@ -178,6 +237,63 @@ export function TrendChart({ products, dataMap }: TrendChartProps) {
         })
       );
     }
+
+    // 计算默认显示范围（自适应最新年款产品的数据范围）
+    const totalWeeks = allWeeks.length;
+    
+    // 找到最新年款的产品
+    const latestYear = Math.max(...products.map(p => p.year));
+    const latestYearProducts = products.filter(p => p.year === latestYear);
+    
+    // 计算最新年款产品的数据范围
+    let latestYearWeeks: string[] = [];
+    if (latestYearProducts.length > 0) {
+      const latestYearWeekSet = new Set<string>();
+      latestYearProducts.forEach((p) => {
+        const release = dayjs(p.releaseDate);
+        const arr = dataMap[p.id] || [];
+        arr.forEach((item) => {
+          const d = dayjs(item.date);
+          const week = Math.floor(d.diff(release, 'day') / 7) + 1;
+          if (week >= 1) {
+            const label = `第${week}周`;
+            latestYearWeekSet.add(label);
+          }
+        });
+      });
+      latestYearWeeks = Array.from(latestYearWeekSet).sort((a, b) => {
+        return parseInt(a.replace(/\D/g, '')) - parseInt(b.replace(/\D/g, ''));
+      });
+    }
+    
+    // 计算开始和结束位置
+    let startPercent = 0;
+    let endPercent = 100;
+    
+    if (latestYearWeeks.length > 0) {
+      // 如果最新年款有数据，定位到其时间区间
+      const latestYearStartIndex = allWeeks.findIndex(week => latestYearWeeks.includes(week));
+      const latestYearEndIndex = allWeeks.findLastIndex(week => latestYearWeeks.includes(week));
+      
+      if (latestYearStartIndex !== -1 && latestYearEndIndex !== -1) {
+        // 计算最新年款数据在总数据中的位置百分比
+        startPercent = (latestYearStartIndex / totalWeeks) * 100;
+        endPercent = ((latestYearEndIndex + 1) / totalWeeks) * 100;
+      } else {
+        // 如果找不到匹配的周数，使用最近12周
+        const defaultWeeksToShow = Math.min(12, totalWeeks);
+        startPercent = totalWeeks > defaultWeeksToShow ? 
+          ((totalWeeks - defaultWeeksToShow) / totalWeeks) * 100 : 0;
+        endPercent = 100;
+      }
+    } else {
+      // 如果最新年款没有数据，使用最近12周
+      const defaultWeeksToShow = Math.min(12, totalWeeks);
+      startPercent = totalWeeks > defaultWeeksToShow ? 
+        ((totalWeeks - defaultWeeksToShow) / totalWeeks) * 100 : 0;
+      endPercent = 100;
+    }
+
     chart.setOption({
       toolbox: {
         feature: {
@@ -246,27 +362,38 @@ export function TrendChart({ products, dataMap }: TrendChartProps) {
         // }
       ],
       series,
-      grid: { left: 40, right: 30, top: 60, bottom: 30 },
-      // dataZoom: [
-      //   {
-      //     type: 'slider',
-      //     show: true,
-      //     xAxisIndex: 0,
-      //     start: 0,
-      //     end: 100,
-      //     height: 24,
-      //     bottom: 0,
-      //     handleSize: '80%',
-      //     showDetail: false,
-      //     brushSelect: false,
-      //   },
-      //   {
-      //     type: 'inside',
-      //     xAxisIndex: 0,
-      //     start: 0,
-      //     end: 100,
-      //   }
-      // ],
+      grid: { left: 40, right: 30, top: 60, bottom: 60 }, // 增加底部空间给数据缩放组件
+      dataZoom: [
+        {
+          type: 'slider',
+          show: true,
+          xAxisIndex: 0,
+          start: startPercent,
+          end: endPercent,
+          height: 24,
+          bottom: 10,
+          handleSize: '80%',
+          showDetail: false,
+          brushSelect: false,
+          backgroundColor: '#f5f5f5',
+          borderColor: '#ddd',
+          fillerColor: 'rgba(255, 105, 0, 0.2)',
+          handleStyle: {
+            color: '#ff6900',
+            borderColor: '#ff6900',
+          },
+          textStyle: {
+            color: '#666',
+            fontSize: 12,
+          },
+        },
+        {
+          type: 'inside',
+          xAxisIndex: 0,
+          start: startPercent,
+          end: endPercent,
+        }
+      ],
     });
     function handleResize() {
       chart.resize();

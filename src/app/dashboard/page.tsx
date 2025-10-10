@@ -3,7 +3,6 @@ import TrendCharts from './_components/trend-charts';
 import Database from 'better-sqlite3';
 import { join } from 'path';
 import { Metadata } from 'next';
-import { Brand, brandList } from '../../../data/brand';
 import { BrandShareTrendChart } from './_components/brand-share-trend-chart';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { BrandShareBarRaceChart } from './_components/brand-share-bar-race-chart';
