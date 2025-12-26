@@ -32,5 +32,6 @@ export const productList = [
   { "id": 21931, "name": "Xiaomi 17", brand: "Xiaomi", subCategory: "Xiaomi 数字", year: 2025, releaseDate: "2025-09-25" },
   { "id": 21932, "name": "Xiaomi 17 Pro", brand: "Xiaomi", subCategory: "Xiaomi 数字", year: 2025, releaseDate: "2025-09-25" },
   { "id": 21936, "name": "Xiaomi 17 Pro Max", brand: "Xiaomi", subCategory: "Xiaomi 数字", year: 2025, releaseDate: "2025-09-25" },
+  { "id": 22422, "name": "Xiaomi 17 Ultra", brand: "Xiaomi", subCategory: "Xiaomi 数字", year: 2025, releaseDate: "2025-12-25" },
 ] as Product[];
 
