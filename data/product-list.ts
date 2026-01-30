@@ -35,5 +35,7 @@ export const productList = [
   { "id": 22422, "name": "Xiaomi 17 Ultra", brand: "Xiaomi", subCategory: "Xiaomi 数字", year: 2025, releaseDate: "2025-12-25" },
   { "id": 22172, "name": "REDMI K90", brand: "REDMI", subCategory: "REDMI K", year: 2025, releaseDate: "2025-10-23" },
   { "id": 22171, "name": "REDMI K90 Pro Max", brand: "REDMI", subCategory: "REDMI K", year: 2025, releaseDate: "2025-10-23" },
+  { "id": 22526, "name": "REDMI Turbo 5", brand: "REDMI", subCategory: "REDMI Turbo", year: 2025, releaseDate: "2026-01-29" },
+  { "id": 22527, "name": "REDMI Turbo 5 Max", brand: "REDMI", subCategory: "REDMI Turbo", year: 2025, releaseDate: "2026-01-29" },
 ] as Product[];
 
